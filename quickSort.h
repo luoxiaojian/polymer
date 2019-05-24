@@ -27,11 +27,11 @@
 
 template <class E, class BinPred, class intT>
 void insertionSort(E* A, intT n, BinPred f) {
-  for (intT i=0; i < n; i++) {
+  for (intT i = 0; i < n; i++) {
     E v = A[i];
     E* B = A + i;
-    while (--B >= A && f(v,*B)) *(B+1) = *B;
-    *(B+1) = v;
+    while (--B >= A && f(v, *B)) *(B + 1) = *B;
+    *(B + 1) = v;
   }
 }
 
@@ -39,37 +39,38 @@ void insertionSort(E* A, intT n, BinPred f) {
 
 template <class E, class BinPred>
 E median(E a, E b, E c, BinPred f) {
-  return  f(a,b) ? (f(b,c) ? b : (f(a,c) ? c : a)) 
-           : (f(a,c) ? a : (f(b,c) ? c : b));
+  return f(a, b) ? (f(b, c) ? b : (f(a, c) ? c : a))
+                 : (f(a, c) ? a : (f(b, c) ? c : b));
 }
 
 // Quicksort based on median of three elements as pivot
 //  and uses insertionSort for small inputs
 template <class E, class BinPred, class intT>
 void quickSort(E* A, intT n, BinPred f) {
-  if (n < ISORT) insertionSort(A, n, f);
+  if (n < ISORT)
+    insertionSort(A, n, f);
   else {
-    //E p = std::__median(A[n/4],A[n/2],A[(3*n)/4],f);
-    E p = median(A[n/4],A[n/2],A[(3*n)/4],f);
-    E* L = A;   // below L are less than pivot
-    E* M = A;   // between L and M are equal to pivot
-    E* R = A+n-1; // above R are greater than pivot
+    // E p = std::__median(A[n/4],A[n/2],A[(3*n)/4],f);
+    E p = median(A[n / 4], A[n / 2], A[(3 * n) / 4], f);
+    E* L = A;          // below L are less than pivot
+    E* M = A;          // between L and M are equal to pivot
+    E* R = A + n - 1;  // above R are greater than pivot
     while (1) {
-      while (!f(p,*M)) {
-	if (f(*M,p)) std::swap(*M,*(L++));
-	if (M >= R) break; 
-	M++;
+      while (!f(p, *M)) {
+        if (f(*M, p)) std::swap(*M, *(L++));
+        if (M >= R) break;
+        M++;
       }
-      while (f(p,*R)) R--;
-      if (M >= R) break; 
-      std::swap(*M,*R--); 
-      if (f(*M,p)) std::swap(*M,*(L++));
+      while (f(p, *R)) R--;
+      if (M >= R) break;
+      std::swap(*M, *R--);
+      if (f(*M, p)) std::swap(*M, *(L++));
       M++;
     }
-    cilk_spawn quickSort(A, L-A, f);
-    quickSort(M, A+n-M, f); // Exclude all elts that equal pivot
+    cilk_spawn quickSort(A, L - A, f);
+    quickSort(M, A + n - M, f);  // Exclude all elts that equal pivot
     cilk_sync;
   }
 }
 
-#endif // _A_QSORT_INCLUDED
+#endif  // _A_QSORT_INCLUDED

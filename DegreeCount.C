@@ -1,5 +1,5 @@
 // This code is part of the project "Ligra: A Lightweight Graph Processing
-// Framework for Shared Memory", presented at Principles and Practice of 
+// Framework for Shared Memory", presented at Principles and Practice of
 // Parallel Programming, 2013.
 // Copyright (c) 2013 Julian Shun and Guy Blelloch
 //
@@ -21,8 +21,8 @@
 // LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
 // OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
 // WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-#include "ligra.h"
 #include "gettime.h"
+#include "ligra.h"
 #include "math.h"
 using namespace std;
 
@@ -32,83 +32,88 @@ bool needOutDegree = false;
 
 template <class vertex>
 void countDegree(graph<vertex> GA, int numOfShards) {
-    const intT n = GA.n;
-    intT *degrees = newA(intT, n);
+  const intT n = GA.n;
+  intT* degrees = newA(intT, n);
 
-    intT shardSize = n / numOfShards;
+  intT shardSize = n / numOfShards;
 
-    if (needOutDegree) {
-	{parallel_for(intT i = 0; i < n; i++) degrees[i] = GA.V[i].getOutDegree();}
-    } else {
-	{parallel_for(intT i = 0; i < n; i++) degrees[i] = GA.V[i].getInDegree();}
+  if (needOutDegree) {
+    {
+      parallel_for(intT i = 0; i < n; i++) degrees[i] = GA.V[i].getOutDegree();
     }
+  } else {
+    { parallel_for(intT i = 0; i < n; i++) degrees[i] = GA.V[i].getInDegree(); }
+  }
 
-    intT accum[numOfShards];
-    intT partitionResult[numOfShards];
-    for (int i = 0; i < numOfShards; i++) {
-	accum[i] = 0;
-	partitionResult[i] = 0;
-    }
+  intT accum[numOfShards];
+  intT partitionResult[numOfShards];
+  for (int i = 0; i < numOfShards; i++) {
+    accum[i] = 0;
+    partitionResult[i] = 0;
+  }
 
-    long long totalDegree = 0;
-    for (intT i = 0; i < n; i++) {
-	totalDegree += degrees[i];
-    }
+  long long totalDegree = 0;
+  for (intT i = 0; i < n; i++) {
+    totalDegree += degrees[i];
+  }
 
-    intT averageDegree = totalDegree / numOfShards;
-    intT counter = 0;
-    intT tmpSizeCounter = 0;
-    for (intT i = 0; i < n; i+=PAGESIZE/sizeof(double)) {
-	for (intT j = 0; j < PAGESIZE / sizeof(double); j++) {
-	    if (i + j >= n)
-		break;
-	    accum[counter] += degrees[i + j];
-	    partitionResult[counter] += 1;
-	    tmpSizeCounter++;
-	}
-	if (accum[counter] >= averageDegree && counter < numOfShards - 1) {
-	    counter++;
-	    cout << tmpSizeCounter / (double)(PAGESIZE / sizeof(double)) << endl;
-	    tmpSizeCounter = 0;
-	}
+  intT averageDegree = totalDegree / numOfShards;
+  intT counter = 0;
+  intT tmpSizeCounter = 0;
+  for (intT i = 0; i < n; i += PAGESIZE / sizeof(double)) {
+    for (intT j = 0; j < PAGESIZE / sizeof(double); j++) {
+      if (i + j >= n) break;
+      accum[counter] += degrees[i + j];
+      partitionResult[counter] += 1;
+      tmpSizeCounter++;
     }
-    
-    cout << tmpSizeCounter / (double)(PAGESIZE / sizeof(double));
-    
-    for (int i = 0; i < numOfShards; i++) {
-	cout << accum[i] << endl;
+    if (accum[counter] >= averageDegree && counter < numOfShards - 1) {
+      counter++;
+      cout << tmpSizeCounter / (double)(PAGESIZE / sizeof(double)) << endl;
+      tmpSizeCounter = 0;
     }
+  }
 
-    intT sum = 0;
-    for (int i = 0; i < numOfShards; i++) {
-	sum += partitionResult[i];
-	cout << partitionResult[i] << " " << partitionResult[i]/(double)(PAGESIZE / sizeof(double)) << endl;
-    }
-    cout << sum << endl;
-    cout << GA.n << endl;
-    free(degrees);
+  cout << tmpSizeCounter / (double)(PAGESIZE / sizeof(double));
+
+  for (int i = 0; i < numOfShards; i++) {
+    cout << accum[i] << endl;
+  }
+
+  intT sum = 0;
+  for (int i = 0; i < numOfShards; i++) {
+    sum += partitionResult[i];
+    cout << partitionResult[i] << " "
+         << partitionResult[i] / (double)(PAGESIZE / sizeof(double)) << endl;
+  }
+  cout << sum << endl;
+  cout << GA.n << endl;
+  free(degrees);
 }
 
-int parallel_main(int argc, char* argv[]) {  
+int parallel_main(int argc, char* argv[]) {
   char* iFile;
   bool binary = false;
   bool symmetric = false;
   needOutDegree = false;
   int numOfShards = -1;
-  if(argc > 1) iFile = argv[1];
-  if(argc > 2) numOfShards = atoi(argv[2]);
-  if(argc > 3) if((string) argv[3] == (string) "-outDeg") needOutDegree = true;
-  if(argc > 4) if((string) argv[4] == (string) "-s") symmetric = true;
-  if(argc > 5) if((string) argv[5] == (string) "-b") binary = true;
-  
-  if(symmetric) {
-    graph<symmetricVertex> G = 
-      readGraph<symmetricVertex>(iFile,symmetric,binary);
+  if (argc > 1) iFile = argv[1];
+  if (argc > 2) numOfShards = atoi(argv[2]);
+  if (argc > 3)
+    if ((string)argv[3] == (string) "-outDeg") needOutDegree = true;
+  if (argc > 4)
+    if ((string)argv[4] == (string) "-s") symmetric = true;
+  if (argc > 5)
+    if ((string)argv[5] == (string) "-b") binary = true;
+
+  if (symmetric) {
+    graph<symmetricVertex> G =
+        readGraph<symmetricVertex>(iFile, symmetric, binary);
     countDegree(G, numOfShards);
-    G.del(); 
+    G.del();
   } else {
-    graph<asymmetricVertex> G = 
-      readGraph<asymmetricVertex>(iFile,symmetric,binary);
+    graph<asymmetricVertex> G =
+        readGraph<asymmetricVertex>(iFile, symmetric, binary);
     countDegree(G, numOfShards);
     G.del();
   }

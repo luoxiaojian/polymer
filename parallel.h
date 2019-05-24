@@ -1,5 +1,5 @@
 // This code is part of the project "Ligra: A Lightweight Graph Processing
-// Framework for Shared Memory", presented at Principles and Practice of 
+// Framework for Shared Memory", presented at Principles and Practice of
 // Parallel Programming, 2013.
 // Copyright (c) 2013 Julian Shun and Guy Blelloch
 //
@@ -75,7 +75,7 @@ typedef unsigned int uintT;
 #define PRIuintT "u"
 #endif
 
-//edges store 32-bit quantities unless EDGELONG is defined
+// edges store 32-bit quantities unless EDGELONG is defined
 #if defined(EDGELONG)
 typedef long long intE;
 typedef unsigned long long uintE;
